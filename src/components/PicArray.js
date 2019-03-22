@@ -2,14 +2,15 @@ import React, {Component} from 'react';
 
 class PicArray extends Component {
     render() {
-        return this.props.picArray.map((picArr) => (
-            <tr>
+        return this.props.picArray.map((picArr, i) => (
+
+            <tr key={i}>
                 <td>
-                    <img src={picArr.thumbnails.w160} alt='Picture not viewable.' />
+                    <img src={picArr.thumbnail} alt={picArr.title} />
                 </td>
                 <td>
                     <h3>{picArr.title}</h3>
-                    <p>{picArr.description}</p>
+                    <p>{picArr.details}</p>
                 </td>
                 <td>
                     <a href={picArr.filename}>View</a>
@@ -19,5 +20,4 @@ class PicArray extends Component {
         ));
     }
 }
-
 export default PicArray;
