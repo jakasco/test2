@@ -1,3 +1,3 @@
 # linkki tehtävään
-[sana](http://users.metropolia.fi/~kaspermu/react2/build/)
+[linkki](http://users.metropolia.fi/~kaspermu/react2/build/)
 
