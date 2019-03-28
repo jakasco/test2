@@ -1,43 +1,42 @@
 import React, {Component} from 'react';
-import './App.css';
-import PicArray from './components/PicArray';
+import {BrowserRouter as Router, Route} from 'react-router-dom';
+import {getAllMedia} from './utils/MediaAPI';
+import Nav from './components/nav'
+import Home from './views/Home';
+import Profile from './views/Profile';
+import Single from './views/Single';
+import Login from './views/login.js';
 
-const url = 'http://media.mw.metropolia.fi/wbma/media/';
 
 class App extends Component {
 
     state = {
-        picArray: [ ],
+        picArray: [],
     };
 
-componentDidMount() {
-    fetch( url).then((response) => {
-        return response.json();
-    }).then( (json) => {
-        json.map(item => {
-            return fetch(url + item.file_id).then(response => {
-                return response.json();
-            }).then(items => {
-                console.log(items);
-                this.setState({
-                    picArray: [...this.state.picArray, items]
-                })
-            });
-        });
-    });
-}
+    componentDidMount() {
+        getAllMedia().then(pics => {
+            this.setState({picArray: pics});
+        })
+    }
 
-
-
-
-render() {
-    return (
-        <table>
-            <tbody>
-            <PicArray picArray={this.state.picArray}/>
-            </tbody>
-        </table>
-    );
+    render() {
+        return (
+            <Router>
+                <div className="container">
+                    <Nav/>
+                    <Route exact path="/" render={(props)=>(
+                      //  <Home {...props} picArray={this.state.picArray}/>
+                        <Login  {...props} />
+                    )}/>
+                    <Route path="/profile" component={Profile}/>
+                    <Route path="/home" render={(props)=>(
+                        <Home {...props} picArray={this.state.picArray}/>
+                    )}/>
+                </div>
+            </Router>
+        );
     }
 }
+
 export default App;
