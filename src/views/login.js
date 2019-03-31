@@ -1,57 +1,8 @@
 import React, {Component} from 'react';
-import {login2} from '../utils/MediaAPI';
+import {checkLogged, getAllMedia, login5, redirect} from '../utils/MediaAPI';
 import PropTypes from 'prop-types';
 
-const url = 'http://media.mw.metropolia.fi/wbma/login/';
-/*
-const redirect = (bool,to) => {
-    if(bool=="Logged in successfully"){
-        console.log("jatkuu");
-        this.props.history.push('/home');
-    }
-}
 
-const login5 = (username,password) => {
-
-   // let username = "kasperi";
-   // let password = "asdasdass";
-    console.log("u: '"+username+"' p: '"+password+"' "); // u: '"+username+"' p: '"+password+"'");
-    return fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({username, password})
-    }).then(response => response.json()).then(json=> {
-        console.log(json);
-        console.log(json.message);
-        redirect(json.message,"asd");
-    });
-};
-*/
-
-
-const log = () => {
-    const body2 = {
-        username: "kasperi",
-        password: "asdasdass",
-        email: "kasperi.mutku@metropolia.fi",
-        full_name: "kasperi mutku"
-    }
-    fetch(url, {
-        mode: 'no-cors',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body2),
-    }, console.log("body: ", JSON.stringify(body2))).then(response => {
-       console.log(response.json());
-    }).then(json=> {
-        console.log("asd");
-        console.log(json);
-    });
-}
 
 
 class login extends Component {
@@ -77,37 +28,34 @@ class login extends Component {
 
     login = (evt) => {
         evt.preventDefault()
-        this.login5(this.state.username, this.state.password);
-      //  login2(this.state);
+        login5(this.state.username, this.state.password, this);
     };
 
-    login5 = (username,password) => {
+    //jos joku on kirjautunut
+/*
+    componentDidMount() {
 
-        // let username = "kasperi";
-        // let password = "asdasdass";
-        console.log("u: '"+username+"' p: '"+password+"' "); // u: '"+username+"' p: '"+password+"'");
-        return fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({username, password})
-        }).then(response => response.json()).then(json=> {
-            console.log(json);
-            console.log(json.message);
-            console.log("history: "+this.props.history);
-            this.redirect(json.message,"asd");
-        });
-    };
-
-    redirect = (bool,to) => {
-        if(bool=="Logged in successfully"){
-            console.log("jatkuu");
+        console.log("login.js props: " + this.props.logged);
+        if (this.props.logged != null) {
             this.props.history.push('/home');
+        }else if( this.props.logged == false){
+            this.props.history.push('/');
         }
-    }
+    }*/
+
+
+        log = () => {
+            console.log("check:" + this.props.logged);
+            if (this.props.logged != null) {
+                this.props.history.push('/home');
+            }else{
+
+            }
+        };
+
 
     render() {
+
         return (
            <div>
             <h1>Login Page</h1>
