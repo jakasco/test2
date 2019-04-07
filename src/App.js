@@ -1,54 +1,77 @@
 import React, {Component} from 'react';
 import {BrowserRouter as Router, Route} from 'react-router-dom';
-import {redirect,checkLogged, getAllMedia} from './utils/MediaAPI';
-import Nav from './components/nav'
-import Home from './views/Home';
-import Profile from './views/Profile';
+import {getAllMedia, getSingleMedia} from './util/MediaAPI';
+import Front from './views/Front';
 import Single from './views/Single';
-import Login from './views/login.js';
-import Logout from './views/logout';
+import Nav from './components/Nav';
+import Login from './views/Login';
+import Profile from './views/Profile';
+import Logout from './views/Logout';
+import {Grid} from '@material-ui/core';
 
 class App extends Component {
 
-    state = {
-        picArray: [],
-        logged: false,
-    };
-
-    loginCheck = () => {
-        let loggedJson =  checkLogged(localStorage.getItem('token'));
-        console.log("home:  "+loggedJson);
-    }
+  state = {
+    picArray: [],
+    user: null,
+  };
 
 
 
-    componentDidMount() {
-        getAllMedia().then(pics => {
-            this.setState({picArray: pics});
-        });
+  setUser = (user) => {
+    // hae profiilikuva ja liitä se user-objektiin
+  //  console.log(this.state.profile_pic);
+  //  response.profile_pic = this.state.profile_pic;
 
-        checkLogged(localStorage.getItem('token')).then(log => {
-            this.setState({logged: log});
-            console.log("app js logged: "+this.state.logged);
-        });
-    }
+    this.setState({user});
+    getSingleMedia(1707).then(response => {
+      user.profile_pic =  response.filename
+    });
+    console.log("User ",this.state.user);
+  };
 
-    render() {
-        return (
-            <Router>
-                <div className="container">
-                    <Nav/>
-                    <Route exact path="/" render={(props)=>(
-                        <Login  {...props} logged={this.state.logged}/>
-                    )}/>
-                    <Route path="/profile" component={Profile}/>
-                    <Route path="/home" render={(props)=>(
-                        <Home {...props} picArray={this.state.picArray} logged={this.state.logged}/> //...props history Router oma metodi
-                    )}/>
-                </div>
-            </Router>
-        );
-    }
+  checkLogin = () => {
+    return this.state.user !== null;
+  };
+
+  componentDidMount() {
+    getAllMedia().then((pics) => {
+    //  console.log(pics);
+      this.setState({picArray: pics});
+    });
+  }
+
+  render() {
+    return (
+        <Router >
+          <Grid container>
+            <Grid item md={2} xs={12}>
+              <Nav checkLogin={this.checkLogin}/>
+            </Grid>
+
+            <Grid item md={10} xs={12}>
+              <Route path="/home" render={(props) => (
+                  <Front {...props} picArray={this.state.picArray}/>
+              )}/>
+
+              <Route path="/single/:id" component={Single}/>
+
+              <Route path="/profile" render={(props) => (
+                  <Profile {...props} user={this.state.user}/>
+              )}/>
+
+              <Route exact path="/" render={(props) => (
+                  <Login {...props} setUser={this.setUser}/>
+              )}/>
+
+              <Route path="/logout" render={(props) => (
+                  <Logout {...props} setUser={this.setUser}/>
+              )}/>
+            </Grid>
+          </Grid>
+        </Router>
+    );
+  }
 }
 
 export default App;

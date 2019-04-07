@@ -1,86 +1,120 @@
 import React, {Component} from 'react';
-import {checkLogged, getAllMedia, login5, redirect} from '../utils/MediaAPI';
 import PropTypes from 'prop-types';
+import {login, register, getUser, getProfileImage, getSingleMedia} from '../util/MediaAPI';
 
+class Login extends Component {
+  state = {
+    user: {
+      username: '',
+      password: '',
+      email: '',
+      full_name: '',
+    },
+    profile_pic: '',
+    toggleForm: true,
+    userAvailable: true,
+  };
 
+  handleLoginSubmit = (evt) => {
+    evt.preventDefault();
+    this.doLogin();
+  };
 
+  handleRegisterSubmit = (evt) => {
+    evt.preventDefault();
+    register(this.state.user).then(user => {
+      console.log(user);
+      this.doLogin();
+    });
+  };
 
-class login extends Component {
+  doLogin = () => {
+    login(this.state.user.username, this.state.user.password).then(response => {
+      console.log(response);
+      this.props.setUser(response.user);
+      localStorage.setItem('token', response.token);
+      this.props.history.push('/home');
+    });
+  };
 
-    state = {
-        username: '',
-        password: '',
-        email: '',
-        full_name: '',
-    };
+  handleInputChange = (evt) => {
+    const target = evt.target;
+    const value = target.value;
+    const name = target.name;
 
-    handleInputChange = (evt) => {
-        const target = evt.target;
-        const value = target.value;
-        const name = target.name;
+    console.log(value, name);
 
-        console.log(value, name);
+    this.setState((prevState) => {
+      return {
+        user: {
+          ...prevState.user,
+          [name]: value,
+        },
+      };
+    });
+  };
 
-        this.setState({
-            [name]: value,
-        });
-    };
+  checkUserAvailable = (evt) => {
+    // tarkasta onko käyttäjätunnus vapaa
+    // jos ei, tee esim alert()
+  };
 
-    login = (evt) => {
-        evt.preventDefault()
-        login5(this.state.username, this.state.password, this);
-    };
+  componentDidMount() {
 
-    //jos joku on kirjautunut
-/*
-    componentDidMount() {
+    console.log(localStorage.getItem('token'));
+    if (localStorage.getItem('token') !== null) {
 
-        console.log("login.js props: " + this.props.logged);
-        if (this.props.logged != null) {
-            this.props.history.push('/home');
-        }else if( this.props.logged == false){
-            this.props.history.push('/');
-        }
-    }*/
-
-
-        log = () => {
-            console.log("check:" + this.props.logged);
-            if (this.props.logged != null) {
-                this.props.history.push('/home');
-            }else{
-
-            }
-        };
-
-
-    render() {
-
-        return (
-           <div>
-            <h1>Login Page</h1>
-
-               <form onSubmit={this.login}>
-                   <input type="text" name="username" placeholder="username"
-                          value={this.state.username}
-                          onChange={this.handleInputChange}/>
-
-                   <input type="text" name="password" placeholder="password"
-                          value={this.state.password}
-                          onChange={this.handleInputChange}/>
-
-                   <button type="submit">testi</button>
-
-               </form>
-
-
-           </div>
-        );
+      getUser(localStorage.getItem('token')).then(response => {
+        console.log("response2: ",response);
+        this.props.setUser(response);
+        this.props.history.push('/home');
+      });
     }
+  }
+
+  render() {
+    return (
+        <React.Fragment>
+          <h1>Login</h1>
+          <form onSubmit={this.handleLoginSubmit}>
+            <input type="text" name="username" placeholder="username"
+                   value={this.state.user.username}
+                   onChange={this.handleInputChange}/>
+            <br/>
+            <input type="password" name="password" placeholder="password"
+                   value={this.state.user.password}
+                   onChange={this.handleInputChange}/>
+            <br/>
+            <button type="submit">Login</button>
+          </form>
+          <h1>Register</h1>
+          <form onSubmit={this.handleRegisterSubmit}>
+            <input type="text" name="username" placeholder="username"
+                   value={this.state.user.username}
+                   onChange={this.handleInputChange} />
+            <br/>
+            <input type="password" name="password" placeholder="password"
+                   value={this.state.user.password}
+                   onChange={this.handleInputChange}/>
+            <br/>
+            <input type="email" name="email" placeholder="email"
+                   value={this.state.user.email}
+                   onChange={this.handleInputChange}/>
+            <br/>
+            <input type="text" name="full_name" placeholder="full name"
+                   value={this.state.user.full_name}
+                   onChange={this.handleInputChange}/>
+            <br/>
+            <button type="submit">Login</button>
+          </form>
+        </React.Fragment>
+    );
+  }
 }
 
-login.propTypes = {
-    history: PropTypes.object
-}
+Login.propTypes = {
+  setUser: PropTypes.func,
+  history: PropTypes.object,
+};
 
-export default login;
+export default Login;
