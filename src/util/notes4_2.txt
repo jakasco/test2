@@ -1,0 +1,332 @@
+//MyFiles.js
+import React, {Component} from 'react';
+// import Table from '../components/Table';
+import PropTypes from 'prop-types';
+import ImageGrid from '../components/ImageGrid';
+import {getUserMedia} from '../util/MediaAPI';
+
+class MyFiles extends Component {
+
+  state = {
+    picArray: [],
+  };
+
+  deleteFile = (id) => {
+    console.log('delete', id);
+    // delete file
+    this.updateImages();
+  };
+
+  updateImages = () => {
+    getUserMedia(localStorage.getItem('token')).then((pics) => {
+      console.log(pics);
+      this.setState({picArray: pics});
+    });
+  };
+
+  componentDidMount() {
+    this.updateImages();
+  }
+
+  render() {
+    return (
+        <React.Fragment>
+          {/* <Table picArray={picArray}/> */}
+          <ImageGrid picArray={this.state.picArray} edit={true} deleteFile={this.deleteFile}/>
+        </React.Fragment>
+    );
+  }
+}
+
+MyFiles.propTypes = {
+  picArray: PropTypes.array,
+};
+
+export default MyFiles;
+
+
+// MediaAPI.js
+const apiUrl = 'http://media.mw.metropolia.fi/wbma/';
+
+const getAllMedia = () => {
+  return fetch(apiUrl + 'media/').then(response => {
+    return response.json();
+  }).then(json => {
+    console.log(json);
+    return Promise.all(json.map(pic => {
+      return fetch(apiUrl + 'media/' + pic.file_id).then(response => {
+        return response.json();
+      });
+    })).then(pics => {
+      console.log(pics);
+      return pics;
+    });
+  });
+};
+
+const getUserMedia = (token) => {
+  const settings = {
+    headers: {
+      'x-access-token': token,
+    },
+  };
+  return fetch(apiUrl + 'media/user', settings).then(response => {
+    return response.json();
+  }).then(json => {
+    console.log(json);
+    return Promise.all(json.map(pic => {
+      return fetch(apiUrl + 'media/' + pic.file_id).then(response => {
+        return response.json();
+      });
+    })).then(pics => {
+      console.log(pics);
+      return pics;
+    });
+  });
+};
+
+const getSingleMedia = (id) => {
+  return fetch(apiUrl + 'media/' + id).then(response => {
+    return response.json();
+  });
+};
+
+const login = (username, password) => {
+  const settings = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({username, password}),
+  };
+  return fetch(apiUrl + 'login', settings).then(response => {
+    return response.json();
+  });
+};
+
+const register = (user) => {
+  const settings = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(user),
+  };
+  return fetch(apiUrl + 'users', settings).then(response => {
+    return response.json();
+  });
+};
+
+const getUser = (token) => {
+  const settings = {
+    headers: {
+      'x-access-token': token,
+    },
+  };
+  return fetch(apiUrl + 'users/user', settings).then(response => {
+    return response.json();
+  });
+};
+
+const getOwner = (id, token) => {
+  const settings = {
+    headers: {
+      'x-access-token': token,
+    },
+  };
+  return fetch(apiUrl + 'users/' + id, settings).then(response => {
+    return response.json();
+  });
+};
+
+const checkUser = (username) => {
+  return fetch(apiUrl + 'users/username/' + username).then(response => {
+    return response.json();
+  });
+};
+
+const getFilesByTag = (tag) => {
+  return fetch(apiUrl + 'tags/' + tag).then(response => {
+    return response.json();
+  });
+};
+
+export {
+  getAllMedia,
+  getSingleMedia,
+  login,
+  register,
+  getUser,
+  getFilesByTag,
+  checkUser,
+  getOwner,
+  getUserMedia,
+};
+
+// App,js
+import React, {Component} from 'react';
+import {BrowserRouter as Router, Route} from 'react-router-dom';
+import {getAllMedia, getFilesByTag} from './util/MediaAPI';
+import Front from './views/Front';
+import Single from './views/Single';
+import Nav from './components/Nav';
+import Login from './views/Login';
+import Profile from './views/Profile';
+import Logout from './views/Logout';
+import Grid from '@material-ui/core/Grid';
+import Upload from './views/Upload';
+import MyFiles from './views/MyFiles';
+
+class App extends Component {
+
+  state = {
+    picArray: [],
+    user: null,
+  };
+
+  setUser = (user) => {
+    // hae profiilikuva ja liitä se user-objektiin
+    getFilesByTag('profile').then((files) => {
+      const profilePic = files.filter((file) => {
+        let outputFile = null;
+        if (file.user_id === this.state.user.user_id) {
+          outputFile = file;
+        }
+        return outputFile;
+      });
+      this.setState((prevState) => {
+        return {
+          user: {
+            ...prevState.user,
+            profilePic: profilePic[0],
+          },
+        };
+      });
+    });
+    this.setState({user});
+  };
+
+  setUserLogout = (user) => {
+    this.setState({user});
+  };
+
+  checkLogin = () => {
+    return this.state.user !== null;
+  };
+
+  updateImages = () => {
+    getAllMedia().then((pics) => {
+      console.log(pics);
+      this.setState({picArray: pics});
+    });
+  };
+
+  componentDidMount() {
+    this.updateImages();
+  }
+
+  render() {
+    return (
+        <Router basename='/~ilkkamtk/mpjakk-react'>
+          <Grid container>
+            <Grid item md={2}>
+              <Nav checkLogin={this.checkLogin}/>
+            </Grid>
+            <Grid item md={10}>
+              <Route path="/home" render={(props) => (
+                  <Front {...props} picArray={this.state.picArray}/>
+              )}/>
+
+              <Route path="/upload" render={(props) => (
+                  <Upload {...props} updateImages={this.updateImages}/>
+              )}/>
+
+              <Route path="/single/:id" component={Single}/>
+
+              <Route path="/my-files" component={MyFiles}/>
+
+              <Route path="/profile" render={(props) => (
+                  <Profile {...props} user={this.state.user}/>
+              )}/>
+
+              <Route exact path="/" render={(props) => (
+                  <Login {...props} setUser={this.setUser}/>
+              )}/>
+
+              <Route path="/logout" render={(props) => (
+                  <Logout {...props} setUserLogout={this.setUserLogout}/>
+              )}/>
+            </Grid>
+          </Grid>
+        </Router>
+    );
+  }
+}
+
+export default App;
+
+
+// Nav.js
+import React from 'react';
+import {Link} from 'react-router-dom';
+import PropTypes from 'prop-types';
+import {List, ListItem, ListItemIcon, ListItemText} from '@material-ui/core';
+import {Home, AccountBox, ExitToApp, AddCircle, Folder} from '@material-ui/icons';
+
+const Nav = (props) => {
+  return (
+      <nav>
+        <List>
+          <ListItem button component={Link} to="/home">
+            <ListItemIcon>
+              <Home/>
+            </ListItemIcon>
+            <ListItemText primary="Home"/>
+          </ListItem>
+          {props.checkLogin() &&
+          <React.Fragment>
+            <ListItem button component={Link} to="/my-files">
+              <ListItemIcon>
+                <Folder/>
+              </ListItemIcon>
+              <ListItemText primary="My Files"/>
+            </ListItem>
+            <ListItem button component={Link} to="/upload">
+              <ListItemIcon>
+                <AddCircle/>
+              </ListItemIcon>
+              <ListItemText primary="Upload"/>
+            </ListItem>
+            <ListItem button component={Link} to="/profile">
+              <ListItemIcon>
+                <AccountBox/>
+              </ListItemIcon>
+              <ListItemText primary="Profile"/>
+            </ListItem>
+            <ListItem button component={Link} to="/logout">
+              <ListItemIcon>
+                <ExitToApp/>
+              </ListItemIcon>
+              <ListItemText primary="Logout"/>
+            </ListItem>
+          </React.Fragment>
+          }
+          {!props.checkLogin() &&
+          <ListItem button component={Link} to="/">
+            <ListItemIcon>
+              <ExitToApp/>
+            </ListItemIcon>
+            <ListItemText primary="Login"/>
+          </ListItem>
+          }
+
+        </List>
+      </nav>
+  );
+};
+
+Nav.propTypes = {
+  checkLogin: PropTypes.func,
+};
+
+export default Nav;
